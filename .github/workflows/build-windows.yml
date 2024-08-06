@@ -1,0 +1,41 @@
+name: Build Minetest for Windows
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up MSYS2
+        uses: msys2/setup-msys2@v2
+        with:
+          update: true
+          install: >-
+            base-devel
+            mingw-w64-x86_64-toolchain
+            mingw-w64-x86_64-cmake
+            mingw-w64-x86_64-pkg-config
+            mingw-w64-x86_64-boost
+            mingw-w64-x86_64-zlib
+            mingw-w64-x86_64-libjpeg-turbo
+
+      - name: Build with CMake
+        run: |
+          cmake -G "MinGW Makefiles" -DCMAKE_BUILD_TYPE=Release -B build -S .
+          cmake --build build --config Release
+
+      - name: Archive build artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: Minetest-Windows
+          path: build/bin/Release/windows.exe
